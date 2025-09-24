@@ -1,0 +1,117 @@
+/* Lesson Selector Styles */
+.lesson-selector {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.lesson-selector h2 {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 30px;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.lesson-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.lesson-card {
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 15px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.lesson-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+  border-color: #667eea;
+}
+
+.lesson-card.selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.lesson-number {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.lesson-count {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.selected-lesson-info {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  margin-top: 20px;
+  box-shadow: 0 5px 20px rgba(240, 147, 251, 0.4);
+}
+
+.selected-lesson-info h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.3rem;
+}
+
+.selected-lesson-info p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .lesson-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+  }
+  
+  .lesson-card {
+    padding: 15px;
+  }
+  
+  .lesson-number {
+    font-size: 1rem;
+  }
+  
+  .lesson-count {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .lesson-selector {
+    padding: 15px;
+  }
+  
+  .lesson-selector h2 {
+    font-size: 1.5rem;
+  }
+  
+  .lesson-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+  
+  .lesson-card {
+    padding: 12px;
+  }
+}
