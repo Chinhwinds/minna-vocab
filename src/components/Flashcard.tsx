@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { VocabularyItem } from '../data/vocabulary';
-import './Flashcard.css';
+
+import { Volume2, RotateCw, Eye, ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface FlashcardProps {
   vocabulary: VocabularyItem;
@@ -18,22 +19,18 @@ const Flashcard: React.FC<FlashcardProps> = ({
   totalCards
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [showAnswer, setShowAnswer] = useState(false);
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
-    setShowAnswer(!showAnswer);
   };
 
   const handleNext = () => {
     setIsFlipped(false);
-    setShowAnswer(false);
     onNext();
   };
 
   const handlePrevious = () => {
     setIsFlipped(false);
-    setShowAnswer(false);
     onPrevious();
   };
 
@@ -47,85 +44,77 @@ const Flashcard: React.FC<FlashcardProps> = ({
   };
 
   return (
-    <div className="flashcard-container">
-      <div className="flashcard-header">
-        <span className="lesson-badge">Bài {vocabulary.lesson}</span>
-        <span className="card-counter">{currentIndex + 1} / {totalCards}</span>
+    <div className="max-w-xl mx-auto">
+      <div className="flex items-center justify-between mb-3">
+        <span className="inline-flex items-center text-xs px-2 py-1 rounded-md border border-border bg-card text-muted">Bài {vocabulary.lesson}</span>
+        <span className="text-xs text-muted">{currentIndex + 1} / {totalCards}</span>
       </div>
 
-      <div 
-        className={`flashcard ${isFlipped ? 'flipped' : ''}`}
-        onClick={handleFlip}
-      >
-        <div className="flashcard-front">
-          <div className="vocabulary-text">
-            <h2>{vocabulary.vocabulary}</h2>
-            {vocabulary.kanji && (
-              <p className="kanji">{vocabulary.kanji}</p>
-            )}
-            {vocabulary.han_viet && (
-              <p className="han-viet">{vocabulary.han_viet}</p>
-            )}
-          </div>
-          
-          <div className="audio-section">
-            <button 
-              className="audio-button"
-              onClick={(e) => {
-                e.stopPropagation();
-                playAudio();
-              }}
-              title="Phát âm"
-            >
-              🔊
-            </button>
-          </div>
-          
-          <div className="flip-hint">
-            <p>Click để xem nghĩa</p>
-          </div>
-        </div>
-
-        <div className="flashcard-back">
-          <div className="meaning-text">
-            <h3>Nghĩa:</h3>
-            <p>{vocabulary.meaning}</p>
-          </div>
-          
-          <div className="vocabulary-info">
-            <p><strong>Từ vựng:</strong> {vocabulary.vocabulary}</p>
-            {vocabulary.kanji && (
-              <p><strong>Hán tự:</strong> {vocabulary.kanji}</p>
-            )}
-            {vocabulary.han_viet && (
-              <p><strong>Âm Hán:</strong> {vocabulary.han_viet}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="flashcard-controls">
-        <button 
-          className="control-button prev-button"
-          onClick={handlePrevious}
-          disabled={currentIndex === 0}
-        >
-          ⬅️ Trước
-        </button>
-        
-        <button 
-          className="control-button flip-button"
+      <div className="perspective">
+        <div
+          className={`relative h-80 sm:h-96 w-full preserve-3d transition-transform duration-500 ${isFlipped ? 'rotate-y-180' : 'rotate-y-0'}`}
           onClick={handleFlip}
         >
-          {isFlipped ? '🔄 Xem từ' : '💡 Xem nghĩa'}
-        </button>
-        
+          <div className="absolute inset-0 backface-hidden border border-border rounded-xl bg-card shadow-sm p-6 flex flex-col items-center justify-center text-center">
+            <div className="mb-4">
+              <div className="text-4xl font-bold text-text">{vocabulary.vocabulary}</div>
+              {vocabulary.kanji && (
+                <div className="mt-2 text-2xl font-semibold text-gray-900">{vocabulary.kanji}</div>
+              )}
+              {vocabulary.han_viet && (
+                <div className="mt-1 text-sm text-muted">{vocabulary.han_viet}</div>
+              )}
+            </div>
+            <button
+              className="inline-flex items-center gap-2 border border-border rounded-full px-4 py-2 text-text bg-surface hover:bg-gray-100"
+              onClick={(e) => { e.stopPropagation(); playAudio(); }}
+              aria-label="Phát âm"
+            >
+              <Volume2 size={18} /> Phát âm
+            </button>
+            <div className="mt-4 text-xs text-muted">Nhấp để xem nghĩa</div>
+          </div>
+
+          <div className="absolute inset-0 backface-hidden rotate-y-180 border border-border rounded-xl bg-card shadow-sm p-6 flex flex-col items-center justify-center text-center">
+            <div className="w-full max-w-md">
+              <div className="text-sm text-muted mb-2">Nghĩa</div>
+              <div className="text-lg text-text">{vocabulary.meaning}</div>
+              <div className="mt-4 text-left text-sm text-text space-y-1">
+                <div><span className="font-semibold">Từ vựng:</span> {vocabulary.vocabulary}</div>
+                {vocabulary.kanji && (<div><span className="font-semibold">Hán tự:</span> {vocabulary.kanji}</div>)}
+                {vocabulary.han_viet && (<div><span className="font-semibold">Âm Hán:</span> {vocabulary.han_viet}</div>)}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-2">
         <button 
-          className="control-button next-button"
-          onClick={handleNext}
-          disabled={currentIndex === totalCards - 1}
+          type="button"
+          className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 bg-card text-text hover:bg-gray-50 disabled:opacity-50"
+          onClick={(e) => { e.stopPropagation(); handlePrevious(); }}
+          disabled={currentIndex === 0}
+          aria-label="Trước"
         >
-          Tiếp ➡️
+          <ArrowLeft size={16} /> Trước
+        </button>
+        <button 
+          type="button"
+          className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 bg-gray-900 text-white hover:opacity-90"
+          onClick={(e) => { e.stopPropagation(); handleFlip(); }}
+          aria-label={isFlipped ? 'Xem từ' : 'Xem nghĩa'}
+        >
+          <RotateCw size={16} /> {isFlipped ? 'Xem từ' : 'Xem nghĩa'}
+        </button>
+        <button 
+          type="button"
+          className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 bg-card text-text hover:bg-gray-50 disabled:opacity-50"
+          onClick={(e) => { e.stopPropagation(); handleNext(); }}
+          disabled={currentIndex === totalCards - 1}
+          aria-label="Tiếp"
+        >
+          Tiếp <ArrowRight size={16} />
         </button>
       </div>
     </div>

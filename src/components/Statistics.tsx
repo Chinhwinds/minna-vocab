@@ -1,6 +1,6 @@
 import React from 'react';
 import { getAllLessons, getTotalVocabularyCount, getVocabularyCountByLesson } from '../data/vocabulary';
-import './Statistics.css';
+import { BookOpen, Sigma, NotebookText } from 'lucide-react';
 
 interface StatisticsProps {
   currentLesson: number | null;
@@ -12,52 +12,46 @@ const Statistics: React.FC<StatisticsProps> = ({ currentLesson }) => {
   const currentLessonCount = currentLesson ? getVocabularyCountByLesson(currentLesson) : 0;
 
   return (
-    <div className="statistics">
-      <h3>📊 Thống Kê</h3>
-      
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon">📚</div>
-          <div className="stat-content">
-            <div className="stat-number">{totalLessons}</div>
-            <div className="stat-label">Tổng số bài học</div>
+    <div className="border border-border rounded-md p-4 bg-card mt-4">
+      <h3 className="m-0 text-text font-semibold mb-3 flex items-center gap-2">
+        <Sigma size={18} /> Thống Kê
+      </h3>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+        <div className="rounded-md p-3 bg-surface border border-border flex items-center gap-3">
+          <div className="text-text"><NotebookText /></div>
+          <div>
+            <div className="text-lg font-bold text-text leading-none">{totalLessons}</div>
+            <div className="text-xs text-muted leading-none">Tổng số bài học</div>
           </div>
         </div>
-        
-        <div className="stat-card">
-          <div className="stat-icon">🔤</div>
-          <div className="stat-content">
-            <div className="stat-number">{totalVocabulary}</div>
-            <div className="stat-label">Tổng từ vựng</div>
+        <div className="rounded-md p-3 bg-surface border border-border flex items-center gap-3">
+          <div className="text-text"><BookOpen /></div>
+          <div>
+            <div className="text-lg font-bold text-text leading-none">{totalVocabulary}</div>
+            <div className="text-xs text-muted leading-none">Tổng từ vựng</div>
           </div>
         </div>
-        
         {currentLesson && (
-          <div className="stat-card current">
-            <div className="stat-icon">📖</div>
-            <div className="stat-content">
-              <div className="stat-number">{currentLessonCount}</div>
-              <div className="stat-label">Từ vựng bài {currentLesson}</div>
+          <div className="rounded-md p-3 bg-gray-900 text-white border border-gray-900 flex items-center gap-3">
+            <div><BookOpen /></div>
+            <div>
+              <div className="text-lg font-bold leading-none">{currentLessonCount}</div>
+              <div className="text-xs leading-none">Từ vựng bài {currentLesson}</div>
             </div>
           </div>
         )}
       </div>
-      
-      <div className="progress-info">
-        {currentLesson && (
-          <div className="lesson-progress">
-            <div className="progress-bar">
-              <div 
-                className="progress-fill"
-                style={{ 
-                  width: `${(currentLessonCount / totalVocabulary) * 100}%` 
-                }}
-              ></div>
-            </div>
-            <p>Bài {currentLesson}: {currentLessonCount}/{totalVocabulary} từ vựng</p>
+      {currentLesson && (
+        <div>
+          <div className="w-full h-2 bg-surface rounded-md overflow-hidden border border-border">
+            <div 
+              className="h-full bg-gray-900" 
+              style={{ width: `${(currentLessonCount / totalVocabulary) * 100}%` }}
+            />
           </div>
-        )}
-      </div>
+          <p className="text-xs text-muted mt-2 m-0">Bài {currentLesson}: {currentLessonCount}/{totalVocabulary} từ vựng</p>
+        </div>
+      )}
     </div>
   );
 };

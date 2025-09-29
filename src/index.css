@@ -1,64 +1,29 @@
-/* Global Styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+
+@import "tailwindcss";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* App shell defaults */
+html, body, #root {
+  height: 100%;
 }
 
-body {
-  margin: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: #f8f9fa;
-  line-height: 1.6;
-}
-
-code {
-  font-family: 'Courier New', monospace;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-}
-
-/* Button Focus Styles */
-button:focus {
-  outline: 2px solid #667eea;
-  outline-offset: 2px;
-}
-
-/* Accessibility */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+@layer utilities {
+  .perspective {
+    perspective: 1000px;
   }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-  .app {
-    background: #000;
+  .preserve-3d {
+    transform-style: preserve-3d;
   }
-  
-  .app-header {
-    color: #fff;
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+  .rotate-y-0 {
+    transform: rotateY(0deg);
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
   }
 }

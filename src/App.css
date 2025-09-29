@@ -1,7 +1,7 @@
 /* App Styles */
 .app {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -10,7 +10,6 @@
   padding: 40px 20px;
   color: white;
 }
-
 .app-header h1 {
   margin: 0 0 10px 0;
   font-size: 2.5rem;
@@ -183,5 +182,4 @@
   .study-header h2 {
     font-size: 1.3rem;
   }
-}
 }
