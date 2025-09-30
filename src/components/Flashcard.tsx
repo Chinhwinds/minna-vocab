@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { VocabularyItem } from '../data/vocabulary';
 
-import { Volume2, RotateCw, Eye, ArrowLeft, ArrowRight } from 'lucide-react';
-
+import { Volume2, RotateCw, ArrowLeft, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+// Removed AnimatePresence/motion enter effects to avoid double transitions
+import MotionSwipeCard, { type MotionSwipeCardHandle } from './MotionSwipeCard';
+  
 interface FlashcardProps {
   vocabulary: VocabularyItem;
   onNext: () => void;
@@ -27,9 +30,15 @@ const Flashcard: React.FC<FlashcardProps> = ({
   autoPronounce = false
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [fadeKey, setFadeKey] = useState(0);
+  // Removed entering effect to prevent double transitions
+  const swipeRef = useRef<MotionSwipeCardHandle | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCooldownRef = useRef<number | null>(null);
 
   const handleFlip = () => {
+    // prevent flip when dragging or immediately after a drag ends
+    if (isDragging) return;
+    if (dragCooldownRef.current && Date.now() - dragCooldownRef.current < 120) return;
     setIsFlipped(!isFlipped);
   };
 
@@ -52,16 +61,15 @@ const Flashcard: React.FC<FlashcardProps> = ({
     }
   };
 
+
   // Auto pronounce when new vocabulary shows
   useEffect(() => {
     setIsFlipped(false);
-    setFadeKey(k => k + 1);
     if (autoPronounce) {
       playAudio();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vocabulary.vocabulary]);
-
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -78,12 +86,24 @@ const Flashcard: React.FC<FlashcardProps> = ({
       if (studyMode === 'memorize') {
         if (e.key === 'ArrowLeft') {
           e.preventDefault();
-          onMarkKnown && onMarkKnown();
+          if (swipeRef.current) {
+            swipeRef.current.triggerExit('left').then(() => {
+              onMarkKnown && onMarkKnown();
+            });
+          } else {
+            onMarkKnown && onMarkKnown();
+          }
           return;
         }
         if (e.key === 'ArrowRight') {
           e.preventDefault();
-          onMarkUnknown && onMarkUnknown();
+          if (swipeRef.current) {
+            swipeRef.current.triggerExit('right').then(() => {
+              onMarkUnknown && onMarkUnknown();
+            });
+          } else {
+            onMarkUnknown && onMarkUnknown();
+          }
           return;
         }
       }
@@ -114,43 +134,57 @@ const Flashcard: React.FC<FlashcardProps> = ({
         <span className="text-xs text-muted">{currentIndex + 1} / {totalCards}</span>
       </div>
 
-      <div key={fadeKey} className="perspective transition-opacity duration-300 ease-out opacity-100">
-        <div
-          className={`relative h-80 sm:h-96 w-full preserve-3d transition-transform duration-500 ${isFlipped ? 'rotate-y-180' : 'rotate-y-0'}`}
-          onClick={handleFlip}
+      <div className="perspective">
+        <MotionSwipeCard
+          enabled={studyMode === 'memorize'}
+          threshold={40}
+          onSwipeLeft={() => { onMarkUnknown && onMarkUnknown(); }}
+          onSwipeRight={() => { onMarkKnown && onMarkKnown(); }}
+          ref={swipeRef}
+          onDragStart={() => { setIsDragging(true); }}
+          onDragEnd={() => { setIsDragging(false); dragCooldownRef.current = Date.now(); }}
         >
-          <div className="absolute inset-0 backface-hidden border border-border rounded-xl bg-card shadow-sm p-6 flex flex-col items-center justify-center text-center">
-            <div className="mb-4">
-              <div className="text-4xl font-bold text-text">{vocabulary.vocabulary}</div>
-              {vocabulary.kanji && (
-                <div className="mt-2 text-2xl font-semibold text-gray-900">{vocabulary.kanji}</div>
-              )}
-              {vocabulary.han_viet && (
-                <div className="mt-1 text-sm text-muted">{vocabulary.han_viet}</div>
-              )}
+          <motion.div
+            key={vocabulary.vocabulary}
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className={`relative h-80 sm:h-96 w-full preserve-3d transition-transform duration-500 ${isFlipped ? 'rotate-y-180' : 'rotate-y-0'}`}
+            onClick={handleFlip}
+          >
+            <div className="absolute inset-0 backface-hidden border border-border rounded-xl bg-card shadow-sm p-6 flex flex-col items-center justify-center text-center">
+              <div className="mb-4">
+                <div className="text-4xl font-bold text-text">{vocabulary.vocabulary}</div>
+                {vocabulary.kanji && (
+                  <div className="mt-2 text-2xl font-semibold text-gray-900">{vocabulary.kanji}</div>
+                )}
+                {vocabulary.han_viet && (
+                  <div className="mt-1 text-sm text-muted">{vocabulary.han_viet}</div>
+                )}
+              </div>
+              <button
+                className="inline-flex items-center gap-2 border border-border rounded-full px-4 py-2 text-text bg-surface hover:bg-gray-100"
+                onClick={(e) => { e.stopPropagation(); playAudio(); }}
+                aria-label="Phát âm"
+              >
+                <Volume2 size={18} /> Phát âm
+              </button>
+              <div className="mt-4 text-xs text-muted">Nhấp để xem nghĩa</div>
             </div>
-            <button
-              className="inline-flex items-center gap-2 border border-border rounded-full px-4 py-2 text-text bg-surface hover:bg-gray-100"
-              onClick={(e) => { e.stopPropagation(); playAudio(); }}
-              aria-label="Phát âm"
-            >
-              <Volume2 size={18} /> Phát âm
-            </button>
-            <div className="mt-4 text-xs text-muted">Nhấp để xem nghĩa</div>
-          </div>
 
-          <div className="absolute inset-0 backface-hidden rotate-y-180 border border-border rounded-xl bg-card shadow-sm p-6 flex flex-col items-center justify-center text-center">
-            <div className="w-full max-w-md">
-              <div className="text-sm text-muted mb-2">Nghĩa</div>
-              <div className="text-lg text-text">{vocabulary.meaning}</div>
-              <div className="mt-4 text-left text-sm text-text space-y-1">
-                <div><span className="font-semibold">Từ vựng:</span> {vocabulary.vocabulary}</div>
-                {vocabulary.kanji && (<div><span className="font-semibold">Hán tự:</span> {vocabulary.kanji}</div>)}
-                {vocabulary.han_viet && (<div><span className="font-semibold">Âm Hán:</span> {vocabulary.han_viet}</div>)}
+            <div className="absolute inset-0 backface-hidden rotate-y-180 border border-border rounded-xl bg-card shadow-sm p-6 flex flex-col items-center justify-center text-center">
+              <div className="w-full max-w-md">
+                <div className="text-sm text-muted mb-2">Nghĩa</div>
+                <div className="text-lg text-text">{vocabulary.meaning}</div>
+                <div className="mt-4 text-left text-sm text-text space-y-1">
+                  <div><span className="font-semibold">Từ vựng:</span> {vocabulary.vocabulary}</div>
+                  {vocabulary.kanji && (<div><span className="font-semibold">Hán tự:</span> {vocabulary.kanji}</div>)}
+                  {vocabulary.han_viet && (<div><span className="font-semibold">Âm Hán:</span> {vocabulary.han_viet}</div>)}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </MotionSwipeCard>
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-2">
@@ -187,11 +221,14 @@ const Flashcard: React.FC<FlashcardProps> = ({
           <>
             <button
               type="button"
-              className="inline-flex items-center justify-center gap-2 border border-border rounded-md px-4 py-2 bg-card text-text hover:bg-gray-50"
-              onClick={(e) => { e.stopPropagation(); onMarkUnknown && onMarkUnknown(); }}
+              className="inline-flex items-center justify-center gap-2 border border-border rounded-md px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMarkUnknown && onMarkUnknown();
+              }}
               aria-label="Chưa thuộc (S)"
             >
-              Chưa thuộc (S)
+              Chưa thuộc <ArrowLeft size={16} />
             </button>
             <button 
               type="button"
@@ -203,11 +240,14 @@ const Flashcard: React.FC<FlashcardProps> = ({
             </button>
             <button
               type="button"
-              className="inline-flex items-center justify-center gap-2 border border-border rounded-md px-4 py-2 bg-gray-900 text-white hover:opacity-90"
-              onClick={(e) => { e.stopPropagation(); onMarkKnown && onMarkKnown(); }}
+              className="inline-flex items-center justify-center gap-2 border border-border rounded-md px-4 py-2 bg-green-600 text-white hover:bg-green-700"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMarkKnown && onMarkKnown();
+              }}
               aria-label="Thuộc (A)"
             >
-              Thuộc (A)
+              Thuộc <ArrowRight size={16} />
             </button>
           </>
         )}
