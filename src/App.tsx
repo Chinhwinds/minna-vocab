@@ -324,8 +324,8 @@ function App() {
         )}
       </main>
 
-      <footer className="app-footer">
-        <p>📚 Dữ liệu từ Minna no Nihongo - 50 bài học, {sessionVocabulary.length > 0 ? sessionVocabulary.length : '1,564'} từ vựng</p>
+      <footer className="app-footer text-center text-dark">
+        <p>📚 Dữ liệu từ Minna no Nihongo - 50 bài học, {sessionVocabulary.length > 0 ? sessionVocabulary.length : '1,564'} từ vựng • © @Chinhwind</p>
       </footer>
     </div>
   );

@@ -100,9 +100,11 @@
 .app-footer {
   text-align: center;
   padding: 20px;
-  color: white;
-  opacity: 0.8;
+  color: #111827; /* slate-900 for better contrast */
+  background-color: #f9fafb; /* gray-50 */
+  opacity: 1;
   font-size: 0.9rem;
+  border-top: 1px solid #e5e7eb; /* border */
 }
 
 /* Animations */
