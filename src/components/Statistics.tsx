@@ -1,12 +1,17 @@
 import React from 'react';
 import { getAllLessons, getTotalVocabularyCount, getVocabularyCountByLesson } from '../data/vocabulary';
-import { BookOpen, Sigma, NotebookText } from 'lucide-react';
+import { BookOpen, Sigma, NotebookText, ListChecks } from 'lucide-react';
 
 interface StatisticsProps {
   currentLesson: number | null;
+  totalKnown?: number;
+  totalUnknown?: number;
+  lessonKnown?: number;
+  lessonUnknown?: number;
+  onViewLessonList?: (lesson: number, type: 'known' | 'unknown') => void;
 }
 
-const Statistics: React.FC<StatisticsProps> = ({ currentLesson }) => {
+const Statistics: React.FC<StatisticsProps> = ({ currentLesson, totalKnown, totalUnknown, lessonKnown, lessonUnknown, onViewLessonList }) => {
   const totalLessons = getAllLessons().length;
   const totalVocabulary = getTotalVocabularyCount();
   const currentLessonCount = currentLesson ? getVocabularyCountByLesson(currentLesson) : 0;
@@ -31,6 +36,11 @@ const Statistics: React.FC<StatisticsProps> = ({ currentLesson }) => {
             <div className="text-xs text-muted leading-none">Tổng từ vựng</div>
           </div>
         </div>
+        <div className="rounded-md p-3 bg-surface border border-border">
+          <div className="text-xs text-muted">Toàn bộ</div>
+          <div className="mt-1 text-sm text-text">Thuộc: <span className="font-semibold">{totalKnown ?? '-'}</span></div>
+          <div className="text-sm text-text">Chưa thuộc: <span className="font-semibold">{totalUnknown ?? '-'}</span></div>
+        </div>
         {currentLesson && (
           <div className="rounded-md p-3 bg-gray-900 text-white border border-gray-900 flex items-center gap-3">
             <div><BookOpen /></div>
@@ -42,14 +52,22 @@ const Statistics: React.FC<StatisticsProps> = ({ currentLesson }) => {
         )}
       </div>
       {currentLesson && (
-        <div>
-          <div className="w-full h-2 bg-surface rounded-md overflow-hidden border border-border">
-            <div 
-              className="h-full bg-gray-900" 
-              style={{ width: `${(currentLessonCount / totalVocabulary) * 100}%` }}
-            />
+        <div className="flex items-center justify-between mt-2">
+          <div className="text-xs text-muted m-0">Bài {currentLesson}: {currentLessonCount}/{totalVocabulary} từ vựng</div>
+          <div className="inline-flex items-center gap-2">
+            <button
+              className="text-xs inline-flex items-center gap-1 border border-border rounded px-2 py-1 bg-card text-text hover:bg-gray-50"
+              onClick={() => onViewLessonList && onViewLessonList(currentLesson, 'unknown')}
+            >
+              <ListChecks size={12} /> Chưa thuộc ({lessonUnknown ?? '-'})
+            </button>
+            <button
+              className="text-xs inline-flex items-center gap-1 border border-border rounded px-2 py-1 bg-card text-text hover:bg-gray-50"
+              onClick={() => onViewLessonList && onViewLessonList(currentLesson, 'known')}
+            >
+              <ListChecks size={12} /> Thuộc ({lessonKnown ?? '-'})
+            </button>
           </div>
-          <p className="text-xs text-muted mt-2 m-0">Bài {currentLesson}: {currentLessonCount}/{totalVocabulary} từ vựng</p>
         </div>
       )}
     </div>

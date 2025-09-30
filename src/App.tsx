@@ -10,6 +10,7 @@ import Flashcard from './components/Flashcard';
 import LessonSelector from './components/LessonSelector';
 import Statistics from './components/Statistics';
 import { getVocabularyByLesson } from './data/vocabulary';
+import ProgressList from './pages/ProgressList';
 
 function App() {
   const { user } = useAuth();
@@ -23,11 +24,31 @@ function App() {
   const [progressMap, setProgressMap] = useState<Record<string, LearnStatus> | null>(null);
   const [showCongrats, setShowCongrats] = useState<string | null>(null);
   const [unknownOnly, setUnknownOnly] = useState(false);
+  const [viewList, setViewList] = useState<{ lesson: number; type: 'known' | 'unknown' } | null>(null);
 
   const currentVocabulary = selectedLesson ? getVocabularyByLesson(selectedLesson) : [];
   const [progressReady, setProgressReady] = useState(false);
   const [sessionVocabulary, setSessionVocabulary] = useState<typeof currentVocabulary>([]);
   const currentCard = sessionVocabulary[currentCardIndex];
+
+  // Stats
+  const totalKnown = useMemo(() => {
+    if (!progressMap) return undefined;
+    return Object.values(progressMap).filter(s => s === 'known').length;
+  }, [progressMap]);
+  const totalUnknown = useMemo(() => {
+    if (!progressMap) return undefined;
+    return Object.values(progressMap).filter(s => s === 'unknown').length;
+  }, [progressMap]);
+  const lessonKnown = useMemo(() => {
+    if (!progressMap || !selectedLesson) return undefined;
+    // count within sessionVocabulary intersect map known
+    return sessionVocabulary.filter(v => progressMap[v.vocabulary] === 'known').length;
+  }, [progressMap, sessionVocabulary, selectedLesson]);
+  const lessonUnknown = useMemo(() => {
+    if (!progressMap || !selectedLesson) return undefined;
+    return sessionVocabulary.filter(v => progressMap[v.vocabulary] !== 'known').length;
+  }, [progressMap, sessionVocabulary, selectedLesson]);
 
   // Fetch progress once per lesson when entering memorize (and logged in)
   useEffect(() => {
@@ -122,6 +143,12 @@ function App() {
             <h1 className="m-0 text-lg font-bold">Japanese Flashcard</h1>
           </div>
           <div className="inline-flex items-center gap-3">
+            <button
+              onClick={() => setViewList({ lesson: selectedLesson ?? 1, type: 'unknown' })}
+              className="inline-flex items-center gap-2 bg-gray-200 text-text border border-border px-3 py-2 rounded-md hover:bg-gray-300"
+            >
+              Tiến độ
+            </button>
             <AuthButton />
             {isStudying && (
             <button 
@@ -136,7 +163,24 @@ function App() {
       </header>
 
       <main className="bg-surface min-h-[calc(100vh-64px)] transition-colors">
-        {!isStudying ? (
+        {viewList ? (
+          <ProgressList
+            lesson={viewList.lesson}
+            onBack={() => setViewList(null)}
+            onJumpTo={(ls, vocab) => {
+              setViewList(null);
+              setSelectedLesson(ls);
+              // ensure sessionVocabulary built with current options
+              setIsStudying(true);
+              setStudyMode('normal');
+              // jump by finding index in current lesson's vocabulary (natural order)
+              const list = getVocabularyByLesson(ls);
+              const idx = list.findIndex(v => v.vocabulary === vocab);
+              setSessionVocabulary(list);
+              setCurrentCardIndex(idx >= 0 ? idx : 0);
+            }}
+          />
+        ) : !isStudying ? (
           <div className="max-w-3xl mx-auto p-5">
             <LessonSelector 
               selectedLesson={selectedLesson}
@@ -147,7 +191,14 @@ function App() {
               }}
             />
             
-            <Statistics currentLesson={selectedLesson} />
+            <Statistics
+              currentLesson={selectedLesson}
+              totalKnown={totalKnown}
+              totalUnknown={totalUnknown}
+              lessonKnown={lessonKnown}
+              lessonUnknown={lessonUnknown}
+              onViewLessonList={(lesson, type) => setViewList({ lesson, type })}
+            />
             
             {/* Auto start: removed manual start button */}
           </div>

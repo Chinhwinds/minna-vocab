@@ -26,7 +26,7 @@ const LessonSelector: React.FC<LessonSelectorProps> = ({
           return (
             <button
               key={lesson}
-              className={`text-left border rounded-md p-3 transition ${isSelected ? 'bg-gray-900 text-white border-gray-900' : 'bg-card text-text border-border hover:bg-gray-50'}`}
+              className={`text-left border rounded-md p-3 transition cursor-pointer active:scale-[0.98] ${isSelected ? 'bg-gray-900 text-white border-gray-900' : 'bg-card text-text border-border hover:bg-gray-50 hover:shadow-sm'}`}
               onClick={() => onLessonSelect(lesson)}
             >
               <div className="text-sm font-semibold">Bài {lesson}</div>
