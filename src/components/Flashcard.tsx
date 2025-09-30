@@ -12,6 +12,7 @@ interface FlashcardProps {
   onMarkKnown?: () => void;
   onMarkUnknown?: () => void;
   studyMode?: 'normal' | 'memorize';
+  autoPronounce?: boolean;
 }
 
 const Flashcard: React.FC<FlashcardProps> = ({
@@ -22,9 +23,11 @@ const Flashcard: React.FC<FlashcardProps> = ({
   totalCards,
   onMarkKnown,
   onMarkUnknown,
-  studyMode = 'normal'
+  studyMode = 'normal',
+  autoPronounce = false
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [fadeKey, setFadeKey] = useState(0);
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
@@ -48,6 +51,16 @@ const Flashcard: React.FC<FlashcardProps> = ({
       });
     }
   };
+
+  // Auto pronounce when new vocabulary shows
+  useEffect(() => {
+    setIsFlipped(false);
+    setFadeKey(k => k + 1);
+    if (autoPronounce) {
+      playAudio();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vocabulary.vocabulary]);
 
 
   useEffect(() => {
@@ -101,7 +114,7 @@ const Flashcard: React.FC<FlashcardProps> = ({
         <span className="text-xs text-muted">{currentIndex + 1} / {totalCards}</span>
       </div>
 
-      <div className="perspective">
+      <div key={fadeKey} className="perspective transition-opacity duration-300 ease-out opacity-100">
         <div
           className={`relative h-80 sm:h-96 w-full preserve-3d transition-transform duration-500 ${isFlipped ? 'rotate-y-180' : 'rotate-y-0'}`}
           onClick={handleFlip}

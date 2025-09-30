@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import './App.css';
 import { Home } from 'lucide-react';
 import { AuthProvider } from './context/AuthContext';
@@ -17,9 +17,21 @@ function App() {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isStudying, setIsStudying] = useState(false);
   const [studyMode, setStudyMode] = useState<'normal' | 'memorize'>('normal');
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [autoPronounce, setAutoPronounce] = useState(false);
 
   const currentVocabulary = selectedLesson ? getVocabularyByLesson(selectedLesson) : [];
-  const currentCard = currentVocabulary[currentCardIndex];
+  const studyVocabulary = useMemo(() => {
+    if (!currentVocabulary.length) return [] as typeof currentVocabulary;
+    if (!isShuffle) return currentVocabulary;
+    const shuffled = [...currentVocabulary];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, [currentVocabulary, isShuffle]);
+  const currentCard = studyVocabulary[currentCardIndex];
 
   const handleLessonSelect = (lesson: number) => {
     setSelectedLesson(lesson);
@@ -30,7 +42,7 @@ function App() {
 
   const handleNext = () => {
     setCurrentCardIndex((i) => {
-      const last = currentVocabulary.length - 1;
+      const last = studyVocabulary.length - 1;
       return i < last ? i + 1 : last;
     });
   };
@@ -87,14 +99,21 @@ function App() {
           <div className="max-w-3xl mx-auto p-5">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="m-0 text-lg text-text">Bài {selectedLesson}</h2>
-              <span className="text-xs text-muted">{currentCardIndex + 1} / {currentVocabulary.length}</span>
+              <span className="text-xs text-muted">{currentCardIndex + 1} / {studyVocabulary.length}</span>
             </div>
 
             {/* Toggle study mode */}
             <div className="mb-3">
               <Toggle
                 checked={studyMode === 'memorize'}
-                onChange={(checked) => setStudyMode(checked ? 'memorize' : 'normal')}
+                onChange={(checked) => {
+                  if (checked && !user) {
+                    alert('Bạn cần đăng nhập để dùng chế độ ghi nhớ.');
+                    setStudyMode('normal');
+                    return;
+                  }
+                  setStudyMode(checked ? 'memorize' : 'normal');
+                }}
                 leftLabel="Thường"
                 rightLabel="Ghi nhớ"
               />
@@ -103,7 +122,28 @@ function App() {
               </div>
             </div>
 
-           
+            {/* Study options */}
+            <div className="mb-4 flex flex-col sm:flex-row gap-3">
+              <div className="flex items-center gap-2">
+                <Toggle
+                  checked={isShuffle}
+                  onChange={(checked) => {
+                    setIsShuffle(checked);
+                    setCurrentCardIndex(0);
+                  }}
+                  leftLabel="Theo thứ tự"
+                  rightLabel="Ngẫu nhiên"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Toggle
+                  checked={autoPronounce}
+                  onChange={(checked) => setAutoPronounce(checked)}
+                  leftLabel="Tắt phát âm"
+                  rightLabel="Tự phát âm"
+                />
+              </div>
+            </div>
             
             {currentCard && (
               <Flashcard
@@ -112,8 +152,9 @@ function App() {
                 onNext={handleNext}
                 onPrevious={handlePrevious}
                 currentIndex={currentCardIndex}
-                totalCards={currentVocabulary.length}
+                totalCards={studyVocabulary.length}
                 studyMode={studyMode}
+                autoPronounce={autoPronounce}
                 onMarkKnown={async () => {
                   if (!user) return;
                   await saveProgress(
@@ -141,7 +182,7 @@ function App() {
       </main>
 
       <footer className="app-footer">
-        <p>📚 Dữ liệu từ Minna no Nihongo - 50 bài học, {currentVocabulary.length > 0 ? currentVocabulary.length : '1,564'} từ vựng</p>
+        <p>📚 Dữ liệu từ Minna no Nihongo - 50 bài học, {studyVocabulary.length > 0 ? studyVocabulary.length : '1,564'} từ vựng</p>
       </footer>
     </div>
     </AuthProvider>
