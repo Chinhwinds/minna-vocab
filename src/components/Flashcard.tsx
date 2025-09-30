@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { VocabularyItem } from '../data/vocabulary';
 
 import { Volume2, RotateCw, Eye, ArrowLeft, ArrowRight } from 'lucide-react';
@@ -9,6 +9,9 @@ interface FlashcardProps {
   onPrevious: () => void;
   currentIndex: number;
   totalCards: number;
+  onMarkKnown?: () => void;
+  onMarkUnknown?: () => void;
+  studyMode?: 'normal' | 'memorize';
 }
 
 const Flashcard: React.FC<FlashcardProps> = ({
@@ -16,7 +19,10 @@ const Flashcard: React.FC<FlashcardProps> = ({
   onNext,
   onPrevious,
   currentIndex,
-  totalCards
+  totalCards,
+  onMarkKnown,
+  onMarkUnknown,
+  studyMode = 'normal'
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -43,8 +49,53 @@ const Flashcard: React.FC<FlashcardProps> = ({
     }
   };
 
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+  
+      if (e.code === 'Space') {
+        e.preventDefault();
+        setIsFlipped(p => !p);
+        return;
+      }
+  
+      // Memorize trước
+      if (studyMode === 'memorize') {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          onMarkKnown && onMarkKnown();
+          return;
+        }
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          onMarkUnknown && onMarkUnknown();
+          return;
+        }
+      }
+  
+      // Normal sau
+      if (studyMode === 'normal') {
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          setIsFlipped(false);
+          onNext();
+          return;
+        }
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          setIsFlipped(false);
+          onPrevious();
+          return;
+        }
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [studyMode, onMarkKnown, onMarkUnknown, onNext, onPrevious]);
   return (
-    <div className="max-w-xl mx-auto">
+    <div className="max-w-xl mx-auto" role="group" aria-label="Flashcard" tabIndex={0}>
       <div className="flex items-center justify-between mb-3">
         <span className="inline-flex items-center text-xs px-2 py-1 rounded-md border border-border bg-card text-muted">Bài {vocabulary.lesson}</span>
         <span className="text-xs text-muted">{currentIndex + 1} / {totalCards}</span>
@@ -90,32 +141,63 @@ const Flashcard: React.FC<FlashcardProps> = ({
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-2">
-        <button 
-          type="button"
-          className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 bg-card text-text hover:bg-gray-50 disabled:opacity-50"
-          onClick={(e) => { e.stopPropagation(); handlePrevious(); }}
-          disabled={currentIndex === 0}
-          aria-label="Trước"
-        >
-          <ArrowLeft size={16} /> Trước
-        </button>
-        <button 
-          type="button"
-          className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 bg-gray-900 text-white hover:opacity-90"
-          onClick={(e) => { e.stopPropagation(); handleFlip(); }}
-          aria-label={isFlipped ? 'Xem từ' : 'Xem nghĩa'}
-        >
-          <RotateCw size={16} /> {isFlipped ? 'Xem từ' : 'Xem nghĩa'}
-        </button>
-        <button 
-          type="button"
-          className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 bg-card text-text hover:bg-gray-50 disabled:opacity-50"
-          onClick={(e) => { e.stopPropagation(); handleNext(); }}
-          disabled={currentIndex === totalCards - 1}
-          aria-label="Tiếp"
-        >
-          Tiếp <ArrowRight size={16} />
-        </button>
+        {studyMode === 'normal' ? (
+          <>
+            <button 
+              type="button"
+              className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 bg-card text-text hover:bg-gray-50 disabled:opacity-50"
+              onClick={(e) => { e.stopPropagation(); handlePrevious(); }}
+              disabled={currentIndex === 0}
+              aria-label="Trước"
+            >
+              <ArrowLeft size={16} /> Trước
+            </button>
+            <button 
+              type="button"
+              className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 bg-gray-900 text-white hover:opacity-90"
+              onClick={(e) => { e.stopPropagation(); handleFlip(); }}
+              aria-label={isFlipped ? 'Xem từ' : 'Xem nghĩa'}
+            >
+              <RotateCw size={16} /> {isFlipped ? 'Xem từ' : 'Xem nghĩa'}
+            </button>
+            <button 
+              type="button"
+              className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 bg-card text-text hover:bg-gray-50 disabled:opacity-50"
+              onClick={(e) => { e.stopPropagation(); handleNext(); }}
+              disabled={currentIndex === totalCards - 1}
+              aria-label="Tiếp"
+            >
+              Tiếp <ArrowRight size={16} />
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              className="inline-flex items-center justify-center gap-2 border border-border rounded-md px-4 py-2 bg-card text-text hover:bg-gray-50"
+              onClick={(e) => { e.stopPropagation(); onMarkUnknown && onMarkUnknown(); }}
+              aria-label="Chưa thuộc (S)"
+            >
+              Chưa thuộc (S)
+            </button>
+            <button 
+              type="button"
+              className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 bg-gray-900 text-white hover:opacity-90"
+              onClick={(e) => { e.stopPropagation(); handleFlip(); }}
+              aria-label={isFlipped ? 'Xem từ' : 'Xem nghĩa'}
+            >
+              <RotateCw size={16} /> {isFlipped ? 'Xem từ' : 'Xem nghĩa'}
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center justify-center gap-2 border border-border rounded-md px-4 py-2 bg-gray-900 text-white hover:opacity-90"
+              onClick={(e) => { e.stopPropagation(); onMarkKnown && onMarkKnown(); }}
+              aria-label="Thuộc (A)"
+            >
+              Thuộc (A)
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
